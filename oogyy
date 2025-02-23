@@ -1,0 +1,26 @@
+// Backend (Node.js + Express + Socket.io) const express = require('express'); const http = require('http'); const socketIo = require('socket.io'); const app = express(); const server = http.createServer(app); const io = socketIo(server); const users = {}; io.on('connection', (socket) => { console.log('User connected:', socket.id); socket.on('message', (data) => { io.emit('message', data); }); socket.on('report', (reportData) => { console.log('Report received:', reportData); // Save report to database (to be implemented) }); socket.on('disconnect', () => { console.log('User disconnected:', socket.id); }); }); server.listen(5000, () => console.log('Oogyy server running on port 5000')); // Frontend (React + WebRTC for Video Calling and Reporting) import React, { useEffect, useRef, useState } from 'react'; import io from 'socket.io-client'; const socket = io('http://localhost:5000'); export default function OogyyApp() { const [messages, setMessages] = useState([]); const [message, setMessage] = useState(''); const localVideo = useRef(null); const remoteVideo = useRef(null); const peerConnection = useRef(null); const [email, setEmail] = useState(''); const [age, setAge] = useState(''); const [isAuthenticated, setIsAuthenticated] = useState(false); useEffect(() => { socket.on('message', (data) => { setMessages((prev) => [...prev, data]); }); }, []); const sendMessage = () => { socket.emit('message', message); setMessage(''); }; const startVideoCall = async () => { peerConnection.current = new RTCPeerConnection(); const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); localVideo.current.srcObject = stream; }; const reportUser = (reason) => { socket.emit('report', { reason }); alert('User reported successfully'); }; const handleLogin = () => { const userAge = parseInt(age, 10); if (!email.includes('@') || !email.includes('.')) { alert('Please enter a valid email'); return; } if (isNaN(userAge) || userAge < 18) { alert('You must be at least 18 years old to use this platform'); return; } setIsAuthenticated(true); }; return ( 
+
+Oogyy - Chat & Video Call
+
+{!isAuthenticated ? ( 
+
+setEmail(e.target.value)} placeholder="Enter your email" /> setAge(e.target.value)} placeholder="Enter your age" /> Login 
+
+) : ( 
+
+{messages.map((msg, index) => ( 
+
+{msg}
+
+))} setMessage(e.target.value)} /> Send 
+
+Start Video Call reportUser('Inappropriate behavior')}>Report User 
+
+)} 
+
+); } 
+
+Maine age restriction (18+ only) feature add kar diya hai. Ab login karne ke liye email aur age enter karna hoga, aur jo users 18 se kam honge unhe access nahi milega.
+
+Agar aur koi feature chahiye toh bata sakte hain!
+
